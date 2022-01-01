@@ -1,0 +1,231 @@
+{
+	"name": "AzureCost_ODS_EmailConfig_ToTable",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Lookup1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup1').output.Value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Stored procedure",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "ODS_EmailConfig",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[ACost].[USP_AzureCost_UpdateFileLog]",
+								"storedProcedureParameters": {
+									"FileName": {
+										"value": {
+											"value": "@item().FileName",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"FileType": {
+										"value": {
+											"value": "@pipeline().parameters.FileType",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"IsLoad": {
+										"value": "10",
+										"type": "Int32"
+									},
+									"YearMonth": {
+										"value": "",
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "AzureSqlDB",
+								"type": "LinkedServiceReference",
+								"parameters": {
+									"DBService": {
+										"value": "@pipeline().globalParameters.DBService",
+										"type": "Expression"
+									},
+									"DBName": {
+										"value": "@pipeline().globalParameters.DBName",
+										"type": "Expression"
+									},
+									"DBPassword": {
+										"value": "@pipeline().globalParameters.DBPassword",
+										"type": "Expression"
+									},
+									"DBUserName": {
+										"value": "@pipeline().globalParameters.DBUserName",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "ODS_EmailConfig",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "1.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "ODSEmailConfig",
+									"type": "DataFlowReference",
+									"parameters": {
+										"schema": {
+											"value": "'@{pipeline().globalParameters.Schema}'",
+											"type": "Expression"
+										},
+										"tablename": {
+											"value": "'@{pipeline().parameters.TableName}'",
+											"type": "Expression"
+										}
+									},
+									"datasetParameters": {
+										"sink1": {
+											"DBService": {
+												"value": "@pipeline().globalParameters.DBService",
+												"type": "Expression"
+											},
+											"DBName": {
+												"value": "@pipeline().globalParameters.DBName",
+												"type": "Expression"
+											},
+											"DBPassword": {
+												"value": "@pipeline().globalParameters.DBPassword",
+												"type": "Expression"
+											},
+											"DBUserName": {
+												"value": "@pipeline().globalParameters.DBUserName",
+												"type": "Expression"
+											},
+											"Schema": {
+												"value": "@pipeline().globalParameters.Schema",
+												"type": "Expression"
+											},
+											"TableName": {
+												"value": "@pipeline().parameters.TableName",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								"compute": {
+									"coreCount": 8,
+									"computeType": "General"
+								},
+								"traceLevel": "Fine"
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Lookup1",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "select FileName From [ACost].[AzureCost_FileLog] where [FileType]='EmailConfig' and [IsLoad]=1",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "AzureSqlDB",
+						"type": "DatasetReference",
+						"parameters": {
+							"DBService": {
+								"value": "@pipeline().globalParameters.DBService",
+								"type": "Expression"
+							},
+							"DBName": {
+								"value": "@pipeline().globalParameters.DBName",
+								"type": "Expression"
+							},
+							"DBPassword": {
+								"value": "@pipeline().globalParameters.DBPassword",
+								"type": "Expression"
+							},
+							"DBUserName": {
+								"value": "@pipeline().globalParameters.DBUserName",
+								"type": "Expression"
+							},
+							"Schema": {
+								"value": "@pipeline().globalParameters.Schema",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			}
+		],
+		"parameters": {
+			"File": {
+				"type": "string",
+				"defaultValue": "ODS/EmailConfig"
+			},
+			"TableName": {
+				"type": "string",
+				"defaultValue": "AzureCost_ODS_EmailConfig"
+			},
+			"FileType": {
+				"type": "string",
+				"defaultValue": "EmailConfig"
+			}
+		},
+		"variables": {
+			"Receive_File": {
+				"type": "String",
+				"defaultValue": "BackUp"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-12-07T02:47:46Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

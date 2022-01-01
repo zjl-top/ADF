@@ -1,0 +1,71 @@
+{
+	"name": "FACTAOP",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ODSAOP",
+						"type": "DatasetReference"
+					},
+					"name": "ODSAOP"
+				},
+				{
+					"dataset": {
+						"referenceName": "DIMAccount",
+						"type": "DatasetReference"
+					},
+					"name": "DimAccount"
+				},
+				{
+					"dataset": {
+						"referenceName": "DIMResourceGroup",
+						"type": "DatasetReference"
+					},
+					"name": "DimResourceGroup"
+				},
+				{
+					"dataset": {
+						"referenceName": "ODSExchangeRateInfo",
+						"type": "DatasetReference"
+					},
+					"name": "ODSExchangeRateInfo"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "AzureSqlDB",
+						"type": "DatasetReference"
+					},
+					"name": "FactAOP"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ChangeColumn"
+				},
+				{
+					"name": "select"
+				},
+				{
+					"name": "ForAccountId"
+				},
+				{
+					"name": "ForResourceGroupId"
+				},
+				{
+					"name": "ForODSExchangeRate"
+				},
+				{
+					"name": "ResourceGroupNotNull"
+				},
+				{
+					"name": "NONUllRow"
+				}
+			],
+			"script": "parameters{\n\tTableName as string,\n\tFile as string,\n\tExcelName as string,\n\tschema as string\n}\nsource(output(\n\t\tYearMonth as string,\n\t\tAccountOwnerId as string,\n\t\tSubscriptionName as string,\n\t\tResourceGroup as string,\n\t\tAOP as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\trowUrlColumn: 'FileName') ~> ODSAOP\nsource(output(\n\t\tId as integer,\n\t\tAccountOwnerId as string,\n\t\tAccountName as string,\n\t\tInsertTime as timestamp,\n\t\tUpdateTime as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> DimAccount\nsource(output(\n\t\tId as integer,\n\t\tAccountId as integer,\n\t\tSubscriptionId as integer,\n\t\tSubscriptionGuid as string,\n\t\tSubscriptionName as string,\n\t\tResourceGroup as string,\n\t\tInsertTime as timestamp,\n\t\tUpdateTime as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> DimResourceGroup\nsource(output(\n\t\tYearMonth as string,\n\t\tExchange_Rate as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> ODSExchangeRateInfo\nForODSExchangeRate derive(Updt = currentTimestamp(),\n\t\tYearMonth = toDate(concat(substring(ODSAOP@YearMonth,1,4),'-',substring(ODSAOP@YearMonth,5,2),'-','01')),\n\t\tUSD = toDecimal(AOP)*toDecimal(Exchange_Rate),\n\t\tFileName = split(FileName,'/')[4]) ~> ChangeColumn\nChangeColumn select(mapColumn(\n\t\tResourceGroupId = DimResourceGroup@Id,\n\t\tDate = YearMonth,\n\t\tUSD,\n\t\tUpdateTime = Updt,\n\t\tAOP,\n\t\tFileName\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> select\nResourceGroupNotNull, DimAccount join(ODSAOP@AccountOwnerId == DimAccount@AccountOwnerId,\n\tjoinType:'left',\n\tbroadcast: 'auto')~> ForAccountId\nForAccountId, DimResourceGroup join(DimAccount@Id == AccountId\n\t&& ODSAOP@SubscriptionName == DimResourceGroup@SubscriptionName\n\t&& ResourceGroupNotNull@ResourceGroup == DimResourceGroup@ResourceGroup,\n\tjoinType:'left',\n\tbroadcast: 'auto')~> ForResourceGroupId\nForResourceGroupId, ODSExchangeRateInfo join(ODSAOP@YearMonth == ODSExchangeRateInfo@YearMonth,\n\tjoinType:'left',\n\tbroadcast: 'auto')~> ForODSExchangeRate\nNONUllRow derive(ResourceGroup = iifNull(upper(ResourceGroup),'')) ~> ResourceGroupNotNull\nODSAOP filter(YearMonth!='') ~> NONUllRow\nselect sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinput(\n\t\tAccountOwnerId as string,\n\t\tAccountName as string,\n\t\tServiceAdministratorId as string,\n\t\tSubscriptionId as long,\n\t\tSubscriptionGuid as string,\n\t\tSubscriptionName as string,\n\t\tDate as date,\n\t\tMonth as long,\n\t\tDay as long,\n\t\tYear as long,\n\t\tProduct as string,\n\t\tMeterId as string,\n\t\tMeterCategory as string,\n\t\tMeterSubCategory as string,\n\t\tMeterRegion as string,\n\t\tMeterName as string,\n\t\tConsumedQuantity as double,\n\t\tResourceRate as double,\n\t\tExtendedCost as double,\n\t\tResourceLocation as string,\n\t\tConsumedService as string,\n\t\tInstanceId as string,\n\t\tServiceInfo1 as string,\n\t\tServiceInfo2 as string,\n\t\tAdditionalInfo as string,\n\t\tTags as string,\n\t\tStoreServiceIdentifier as string,\n\t\tDepartmentName as string,\n\t\tCostCenter as string,\n\t\tUnitOfMeasure as string,\n\t\tResourceGroup as string,\n\t\tID as integer,\n\t\tInsertTime as timestamp,\n\t\tFileName as string\n\t),\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tpreSQLs:[(\"delete from {$schema}.{$TableName} where FileName = N'{$ExcelName}'\")],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\terrorHandlingOption: 'stopOnFirstError') ~> FactAOP"
+		}
+	}
+}

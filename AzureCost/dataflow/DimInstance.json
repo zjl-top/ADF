@@ -1,0 +1,64 @@
+{
+	"name": "DimInstance",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Json",
+						"type": "DatasetReference"
+					},
+					"name": "Bill"
+				},
+				{
+					"dataset": {
+						"referenceName": "DIMAccount",
+						"type": "DatasetReference"
+					},
+					"name": "DImAccount"
+				},
+				{
+					"dataset": {
+						"referenceName": "DIMResourceGroup",
+						"type": "DatasetReference"
+					},
+					"name": "DimResourceGroup"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "AzureSqlDB",
+						"type": "DatasetReference"
+					},
+					"name": "DImInstance"
+				}
+			],
+			"transformations": [
+				{
+					"name": "UpperNameAndNotNull"
+				},
+				{
+					"name": "AggColumn"
+				},
+				{
+					"name": "ForAccountID"
+				},
+				{
+					"name": "ForResourceGroupID"
+				},
+				{
+					"name": "Alter"
+				},
+				{
+					"name": "updatetime"
+				},
+				{
+					"name": "select"
+				}
+			],
+			"script": "parameters{\n\ttpf as string\n}\nsource(output(\n\t\tAccountOwnerId as string,\n\t\tAccountName as string,\n\t\tServiceAdministratorId as string,\n\t\tSubscriptionId as integer,\n\t\tSubscriptionGuid as string,\n\t\tSubscriptionName as string,\n\t\tDate as string,\n\t\tMonth as integer,\n\t\tDay as integer,\n\t\tYear as integer,\n\t\tProduct as string,\n\t\tMeterId as string,\n\t\tMeterCategory as string,\n\t\tMeterSubCategory as string,\n\t\tMeterRegion as string,\n\t\tMeterName as string,\n\t\tConsumedQuantity as double,\n\t\tResourceRate as double,\n\t\tExtendedCost as double,\n\t\tResourceLocation as string,\n\t\tConsumedService as string,\n\t\tInstanceId as string,\n\t\tServiceInfo1 as string,\n\t\tServiceInfo2 as string,\n\t\tAdditionalInfo as string,\n\t\tTags as string,\n\t\tStoreServiceIdentifier as string,\n\t\tDepartmentName as string,\n\t\tCostCenter as string,\n\t\tUnitOfMeasure as string,\n\t\tResourceGroup as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tdocumentForm: 'documentPerLine',\n\twildcardPaths:[($tpf)]) ~> Bill\nsource(output(\n\t\tId as integer,\n\t\tAccountOwnerId as string,\n\t\tAccountName as string,\n\t\tInsertTime as timestamp,\n\t\tUpdateTime as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> DImAccount\nsource(output(\n\t\tId as integer,\n\t\tAccountId as integer,\n\t\tSubscriptionId as integer,\n\t\tSubscriptionGuid as string,\n\t\tSubscriptionName as string,\n\t\tResourceGroup as string,\n\t\tInsertTime as timestamp,\n\t\tUpdateTime as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> DimResourceGroup\nBill derive(InstanceName = reverse(split(reverse(upper(InstanceId)),'/')[1]),\n\t\tInstanceId = upper(InstanceId),\n\t\tResourceGroup = iifNull(upper(ResourceGroup),'')) ~> UpperNameAndNotNull\nUpperNameAndNotNull aggregate(groupBy(InstanceId,\n\t\tInstanceName,\n\t\tSubscriptionId,\n\t\tSubscriptionGuid,\n\t\tSubscriptionName,\n\t\tResourceGroup,\n\t\tAccountOwnerId,\n\t\tAccountName),\n\tSubscriptionIdCount = count(AccountOwnerId)) ~> AggColumn\nAggColumn, DImAccount join(AggColumn@AccountOwnerId == DImAccount@AccountOwnerId\n\t&& AggColumn@AccountName == DImAccount@AccountName,\n\tjoinType:'left',\n\tbroadcast: 'auto')~> ForAccountID\nForAccountID, DimResourceGroup join(DImAccount@Id == AccountId\n\t&& AggColumn@SubscriptionId == DimResourceGroup@SubscriptionId\n\t&& AggColumn@SubscriptionName == DimResourceGroup@SubscriptionName\n\t&& AggColumn@SubscriptionGuid == DimResourceGroup@SubscriptionGuid\n\t&& AggColumn@ResourceGroup == DimResourceGroup@ResourceGroup,\n\tjoinType:'left',\n\tbroadcast: 'auto')~> ForResourceGroupID\nselect alterRow(upsertIf(true())) ~> Alter\nForResourceGroupID derive(Updt = currentTimestamp()) ~> updatetime\nupdatetime select(mapColumn(\n\t\tResourceGroupId = DimResourceGroup@Id,\n\t\tInstanceId,\n\t\tInstanceName,\n\t\tUpdateTime = Updt\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> select\nAlter sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinput(\n\t\tAccountOwnerId as string,\n\t\tAccountName as string,\n\t\tServiceAdministratorId as string,\n\t\tSubscriptionId as long,\n\t\tSubscriptionGuid as string,\n\t\tSubscriptionName as string,\n\t\tDate as date,\n\t\tMonth as long,\n\t\tDay as long,\n\t\tYear as long,\n\t\tProduct as string,\n\t\tMeterId as string,\n\t\tMeterCategory as string,\n\t\tMeterSubCategory as string,\n\t\tMeterRegion as string,\n\t\tMeterName as string,\n\t\tConsumedQuantity as double,\n\t\tResourceRate as double,\n\t\tExtendedCost as double,\n\t\tResourceLocation as string,\n\t\tConsumedService as string,\n\t\tInstanceId as string,\n\t\tServiceInfo1 as string,\n\t\tServiceInfo2 as string,\n\t\tAdditionalInfo as string,\n\t\tTags as string,\n\t\tStoreServiceIdentifier as string,\n\t\tDepartmentName as string,\n\t\tCostCenter as string,\n\t\tUnitOfMeasure as string,\n\t\tResourceGroup as string,\n\t\tID as integer,\n\t\tInsertTime as timestamp,\n\t\tFileName as string\n\t),\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:true,\n\tkeys:['InstanceId','ResourceGroupId'],\n\tformat: 'table',\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\terrorHandlingOption: 'stopOnFirstError') ~> DImInstance"
+		}
+	}
+}

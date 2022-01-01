@@ -1,0 +1,83 @@
+{
+	"name": "DIM",
+	"properties": {
+		"activities": [
+			{
+				"name": "DIm_Account",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "AzureCost_DIm_Account",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "DIm_ResourceGroup",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "DIm_Account",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "AzureCost_DIm_ResourceGroup",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "DIm_Instance",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "DIm_ResourceGroup",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "AzureCost_DIm_Instance",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "DIm_Meter",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "DIm_Instance",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "AzureCost_DIm_Meter",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2021-12-06T01:50:22Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

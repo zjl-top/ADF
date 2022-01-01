@@ -1,0 +1,29 @@
+{
+	"name": "AzureSqlDB",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"parameters": {
+			"DBService": {
+				"type": "String",
+				"defaultValue": "dev.database.chinacloudapi.cn"
+			},
+			"DBName": {
+				"type": "String",
+				"defaultValue": "DevDB"
+			},
+			"DBPassword": {
+				"type": "String",
+				"defaultValue": "1qaz!QAZ"
+			},
+			"DBUserName": {
+				"type": "String",
+				"defaultValue": "acost"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"connectionString": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=@{linkedService().DBService};Initial Catalog=@{linkedService().DBName};User ID=@{linkedService().DBUserName};Password=@{linkedService().DBPassword}"
+		}
+	}
+}

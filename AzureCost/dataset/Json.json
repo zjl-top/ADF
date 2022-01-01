@@ -1,0 +1,152 @@
+{
+	"name": "Json",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage2",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"URL": {
+					"value": "@dataset().URL",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"URL": {
+				"type": "string",
+				"defaultValue": "https://azurecost.dfs.core.chinacloudapi.cn/"
+			},
+			"Container": {
+				"type": "string",
+				"defaultValue": "azurecost"
+			},
+			"File": {
+				"type": "string",
+				"defaultValue": "ODS/Detail"
+			},
+			"FIleName": {
+				"type": "string",
+				"defaultValue": "Detail_2020-8.json"
+			}
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().FIleName",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().File",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "@dataset().Container",
+					"type": "Expression"
+				}
+			},
+			"encodingName": "UTF-8"
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"AccountOwnerId": {
+					"type": "string"
+				},
+				"AccountName": {
+					"type": "string"
+				},
+				"ServiceAdministratorId": {
+					"type": "string"
+				},
+				"SubscriptionId": {
+					"type": "integer"
+				},
+				"SubscriptionGuid": {
+					"type": "string"
+				},
+				"SubscriptionName": {
+					"type": "string"
+				},
+				"Date": {
+					"type": "string"
+				},
+				"Month": {
+					"type": "integer"
+				},
+				"Day": {
+					"type": "integer"
+				},
+				"Year": {
+					"type": "integer"
+				},
+				"Product": {
+					"type": "string"
+				},
+				"MeterId": {
+					"type": "string"
+				},
+				"MeterCategory": {
+					"type": "string"
+				},
+				"MeterSubCategory": {
+					"type": "string"
+				},
+				"MeterRegion": {
+					"type": "string"
+				},
+				"MeterName": {
+					"type": "string"
+				},
+				"ConsumedQuantity": {
+					"type": "number"
+				},
+				"ResourceRate": {
+					"type": "number"
+				},
+				"ExtendedCost": {
+					"type": "number"
+				},
+				"ResourceLocation": {
+					"type": "string"
+				},
+				"ConsumedService": {
+					"type": "string"
+				},
+				"InstanceId": {
+					"type": "string"
+				},
+				"ServiceInfo1": {
+					"type": "string"
+				},
+				"ServiceInfo2": {
+					"type": "string"
+				},
+				"AdditionalInfo": {
+					"type": "string"
+				},
+				"Tags": {
+					"type": "string"
+				},
+				"StoreServiceIdentifier": {
+					"type": "string"
+				},
+				"DepartmentName": {
+					"type": "string"
+				},
+				"CostCenter": {
+					"type": "string"
+				},
+				"UnitOfMeasure": {
+					"type": "string"
+				},
+				"ResourceGroup": {
+					"type": "string"
+				}
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

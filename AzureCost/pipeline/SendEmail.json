@@ -1,0 +1,66 @@
+{
+	"name": "SendEmail",
+	"properties": {
+		"activities": [
+			{
+				"name": "Web1",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://azurecostsendemail.chinacloudsites.cn:443/api/AzureCostSendEmail/triggers/manual/invoke?api-version=2020-05-01-preview&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=A6RrdicpPdrrgS_q8-vt79Cirp004XJYS4FRHx2q7Uc",
+					"method": "POST",
+					"body": {
+						"value": "{\n        \"From\": \"@{pipeline().parameters.From}\",\n        \"To\": \"@{pipeline().parameters.To}\",\n        \"CC\": \"@{pipeline().parameters.CC}\",\n        \"Subject\": \"@{pipeline().parameters.Subject}\",\n        \"Message\":\"@{pipeline().parameters.Message}\"\n}",
+						"type": "Expression"
+					},
+					"datasets": [
+						{
+							"referenceName": "AzureSqlDB",
+							"type": "DatasetReference",
+							"parameters": {
+								"DBService": "dev.database.chinacloudapi.cn",
+								"DBName": "DevDB",
+								"DBPassword": "1qaz!QAZ",
+								"DBUserName": "acost",
+								"Schema": "ACost",
+								"TableName": "AzureCost_ODS_Bill"
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"From": {
+				"type": "string",
+				"defaultValue": "13488723171@139.com"
+			},
+			"To": {
+				"type": "string",
+				"defaultValue": "zhujiliang@sharewinfobi.onmicrosoft.com"
+			},
+			"CC": {
+				"type": "string"
+			},
+			"Subject": {
+				"type": "string",
+				"defaultValue": "test"
+			},
+			"Message": {
+				"type": "string",
+				"defaultValue": "Hi"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-12-31T06:04:45Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

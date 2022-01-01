@@ -1,0 +1,322 @@
+{
+	"name": "AzureCost_FACT_ThresholdInformation",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Lookup1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup1').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Stored procedure1",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "ThresholdInformation ODS To FACT_copy1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[ACost].[USP_AzureCost_UpdateFileLog]",
+								"storedProcedureParameters": {
+									"FileName": {
+										"value": {
+											"value": "@item().FileName",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"FileType": {
+										"value": {
+											"value": "@pipeline().parameters.FileType",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"IsLoad": {
+										"value": "10",
+										"type": "Int32"
+									},
+									"YearMonth": {
+										"value": {
+											"value": "@split(split(item().FileName,'.')[0],'_')[1]",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "AzureSqlDB",
+								"type": "LinkedServiceReference",
+								"parameters": {
+									"DBService": {
+										"value": "@pipeline().globalParameters.DBService",
+										"type": "Expression"
+									},
+									"DBName": {
+										"value": "@pipeline().globalParameters.DBName",
+										"type": "Expression"
+									},
+									"DBPassword": {
+										"value": "@pipeline().globalParameters.DBPassword",
+										"type": "Expression"
+									},
+									"DBUserName": {
+										"value": "@pipeline().globalParameters.DBUserName",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "ThresholdInformation ODS To FACT_copy1",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "1.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "FACTThreshold",
+									"type": "DataFlowReference",
+									"parameters": {
+										"Schema": {
+											"value": "'@{pipeline().globalParameters.Schema}'",
+											"type": "Expression"
+										},
+										"FileName": {
+											"value": "'@{item().FileName}'",
+											"type": "Expression"
+										},
+										"TableName": {
+											"value": "'@{pipeline().parameters.FACTThreshold}'",
+											"type": "Expression"
+										}
+									},
+									"datasetParameters": {
+										"ODSThreshold": {
+											"URL": {
+												"value": "@pipeline().globalParameters.URL",
+												"type": "Expression"
+											},
+											"Container": {
+												"value": "@pipeline().globalParameters.Container",
+												"type": "Expression"
+											},
+											"File": {
+												"value": "@pipeline().parameters.File",
+												"type": "Expression"
+											},
+											"FileName": {
+												"value": "@item().FileName",
+												"type": "Expression"
+											}
+										},
+										"DimAccount": {
+											"DBService": {
+												"value": "@pipeline().globalParameters.DBService",
+												"type": "Expression"
+											},
+											"DBName": {
+												"value": "@pipeline().globalParameters.DBName",
+												"type": "Expression"
+											},
+											"UserName": {
+												"value": "@pipeline().globalParameters.DBUserName",
+												"type": "Expression"
+											},
+											"PassWord": {
+												"value": "@pipeline().globalParameters.DBPassword",
+												"type": "Expression"
+											},
+											"Schema": {
+												"value": "@pipeline().globalParameters.Schema",
+												"type": "Expression"
+											},
+											"TableName": {
+												"value": "@pipeline().parameters.DIMAccount",
+												"type": "Expression"
+											}
+										},
+										"DimResourceGroup": {
+											"DBService": {
+												"value": "@pipeline().globalParameters.DBService",
+												"type": "Expression"
+											},
+											"DBName": {
+												"value": "@pipeline().globalParameters.DBName",
+												"type": "Expression"
+											},
+											"UserName": {
+												"value": "@pipeline().globalParameters.DBUserName",
+												"type": "Expression"
+											},
+											"PassWord": {
+												"value": "@pipeline().globalParameters.DBPassword",
+												"type": "Expression"
+											},
+											"Schema": {
+												"value": "@pipeline().globalParameters.Schema",
+												"type": "Expression"
+											},
+											"TableName": {
+												"value": "@pipeline().parameters.DIMResourceGroup",
+												"type": "Expression"
+											}
+										},
+										"FactThreshold": {
+											"DBService": {
+												"value": "@pipeline().globalParameters.DBService",
+												"type": "Expression"
+											},
+											"DBName": {
+												"value": "@pipeline().globalParameters.DBName",
+												"type": "Expression"
+											},
+											"DBPassword": {
+												"value": "@pipeline().globalParameters.DBPassword",
+												"type": "Expression"
+											},
+											"DBUserName": {
+												"value": "@pipeline().globalParameters.DBUserName",
+												"type": "Expression"
+											},
+											"Schema": {
+												"value": "@pipeline().globalParameters.Schema",
+												"type": "Expression"
+											},
+											"TableName": {
+												"value": "@pipeline().parameters.FACTThreshold",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								"compute": {
+									"coreCount": 8,
+									"computeType": "General"
+								},
+								"traceLevel": "Fine"
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Lookup1",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "select FileName  from [ACost].[AzureCost_FileLog]\nwhere [IsLoad]=1 AND [FileType]='ThresholdInformation'",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "AzureSqlDB",
+						"type": "DatasetReference",
+						"parameters": {
+							"DBService": {
+								"value": "@pipeline().globalParameters.DBService",
+								"type": "Expression"
+							},
+							"DBName": {
+								"value": "@pipeline().globalParameters.DBName",
+								"type": "Expression"
+							},
+							"DBPassword": {
+								"value": "@pipeline().globalParameters.DBPassword",
+								"type": "Expression"
+							},
+							"DBUserName": {
+								"value": "@pipeline().globalParameters.DBUserName",
+								"type": "Expression"
+							},
+							"Schema": {
+								"value": "@pipeline().globalParameters.Schema",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			}
+		],
+		"parameters": {
+			"File": {
+				"type": "string",
+				"defaultValue": "ODS/ThresholdInformation"
+			},
+			"DIMAccount": {
+				"type": "string",
+				"defaultValue": "AzureCost_DIM_Account"
+			},
+			"DIMInstance": {
+				"type": "string",
+				"defaultValue": "AzureCost_DIM_Instance"
+			},
+			"DIMMeter": {
+				"type": "string",
+				"defaultValue": "AzureCost_DIM_Meter"
+			},
+			"DIMResourceGroup": {
+				"type": "string",
+				"defaultValue": "AzureCost_DIM_ResourceGroup"
+			},
+			"FACTThreshold": {
+				"type": "string",
+				"defaultValue": "AzureCost_FACT_ThresholdInformation"
+			},
+			"FileType": {
+				"type": "string",
+				"defaultValue": "ThresholdInformation"
+			},
+			"FileLog": {
+				"type": "string",
+				"defaultValue": "AzureCost_FileLog"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-12-06T06:04:46Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

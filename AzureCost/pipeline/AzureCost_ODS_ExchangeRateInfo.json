@@ -1,0 +1,386 @@
+{
+	"name": "AzureCost_ODS_ExchangeRateInfo",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Metadata1",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ExcelSource_metadate",
+						"type": "DatasetReference",
+						"parameters": {
+							"ExcelName": "ThresholdInformation_2021-9.xlsx",
+							"ExcelFile": {
+								"value": "@pipeline().parameters.ExcelFile",
+								"type": "Expression"
+							},
+							"ExcelContainer": {
+								"value": "@pipeline().globalParameters.Container",
+								"type": "Expression"
+							},
+							"URL": {
+								"value": "@pipeline().globalParameters.URL",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Metadata1').output.childItems",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Copy Data To BackUp",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ExcelSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									}
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "ExcelSource",
+									"type": "DatasetReference",
+									"parameters": {
+										"ExcelName": {
+											"value": "@item().name",
+											"type": "Expression"
+										},
+										"ExcelFile": {
+											"value": "@pipeline().parameters.ExcelFile",
+											"type": "Expression"
+										},
+										"ExcelContainer": {
+											"value": "@pipeline().globalParameters.Container",
+											"type": "Expression"
+										},
+										"URL": {
+											"value": "@pipeline().globalParameters.URL",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "csv",
+									"type": "DatasetReference",
+									"parameters": {
+										"URL": {
+											"value": "@pipeline().globalParameters.URL",
+											"type": "Expression"
+										},
+										"Container": {
+											"value": "@pipeline().globalParameters.Container",
+											"type": "Expression"
+										},
+										"File": {
+											"value": "@replace(pipeline().parameters.ExcelFile,'Upload','BackUp')",
+											"type": "Expression"
+										},
+										"FileName": {
+											"value": "@concat(split(item().name,'.')[0],'_',formatDateTime(utcnow(),'yyyy-MM-dd HH:mm:ss')\n,'.csv')",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "Copy Data To ODS",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Copy Data To BackUp",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ExcelSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									}
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "ExcelSource",
+									"type": "DatasetReference",
+									"parameters": {
+										"ExcelName": {
+											"value": "@item().name",
+											"type": "Expression"
+										},
+										"ExcelFile": {
+											"value": "@pipeline().parameters.ExcelFile",
+											"type": "Expression"
+										},
+										"ExcelContainer": {
+											"value": "@pipeline().globalParameters.Container",
+											"type": "Expression"
+										},
+										"URL": {
+											"value": "@pipeline().globalParameters.URL",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "csv",
+									"type": "DatasetReference",
+									"parameters": {
+										"URL": {
+											"value": "@pipeline().globalParameters.URL",
+											"type": "Expression"
+										},
+										"Container": {
+											"value": "@pipeline().globalParameters.Container",
+											"type": "Expression"
+										},
+										"File": {
+											"value": "@replace(pipeline().parameters.ExcelFile,'Upload','ODS')",
+											"type": "Expression"
+										},
+										"FileName": {
+											"value": "@replace(item().name,'.xlsx','.csv')",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "Delete Upload",
+							"type": "Delete",
+							"dependsOn": [
+								{
+									"activity": "Copy Data To ODS",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "ExcelSource",
+									"type": "DatasetReference",
+									"parameters": {
+										"ExcelName": {
+											"value": "@item().name",
+											"type": "Expression"
+										},
+										"ExcelFile": {
+											"value": "@pipeline().parameters.ExcelFile",
+											"type": "Expression"
+										},
+										"ExcelContainer": {
+											"value": "@pipeline().globalParameters.Container",
+											"type": "Expression"
+										},
+										"URL": {
+											"value": "@pipeline().globalParameters.URL",
+											"type": "Expression"
+										}
+									}
+								},
+								"enableLogging": false,
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							}
+						},
+						{
+							"name": "Stored procedure1",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Delete Upload",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[ACost].[USP_AzureCost_UpdateFileLog]",
+								"storedProcedureParameters": {
+									"FileName": {
+										"value": {
+											"value": "@replace(item().Name,'xlsx','csv')",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"FileType": {
+										"value": {
+											"value": "@pipeline().parameters.FileType",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"IsLoad": {
+										"value": "1",
+										"type": "Int32"
+									},
+									"YearMonth": {
+										"value": "",
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "AzureSqlDB",
+								"type": "LinkedServiceReference",
+								"parameters": {
+									"DBService": {
+										"value": "@pipeline().globalParameters.DBService",
+										"type": "Expression"
+									},
+									"DBName": {
+										"value": "@pipeline().globalParameters.DBName",
+										"type": "Expression"
+									},
+									"DBPassword": {
+										"value": "@pipeline().globalParameters.DBPassword",
+										"type": "Expression"
+									},
+									"DBUserName": {
+										"value": "@pipeline().globalParameters.DBUserName",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"ExcelFile": {
+				"type": "string",
+				"defaultValue": "Upload/ExchangeRateInfo"
+			},
+			"TableName": {
+				"type": "string",
+				"defaultValue": "AzureCost_ODS_ExchangeRateInfo"
+			},
+			"FileType": {
+				"type": "string",
+				"defaultValue": "ExchangeRateInfo"
+			}
+		},
+		"variables": {
+			"Receive_File": {
+				"type": "String",
+				"defaultValue": "BackUp"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-12-06T07:47:27Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

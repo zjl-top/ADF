@@ -1,0 +1,88 @@
+{
+	"name": "FACTBill",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Json",
+						"type": "DatasetReference"
+					},
+					"name": "ODSBill"
+				},
+				{
+					"dataset": {
+						"referenceName": "DIMAccount",
+						"type": "DatasetReference"
+					},
+					"name": "DImAccount"
+				},
+				{
+					"dataset": {
+						"referenceName": "DIMResourceGroup",
+						"type": "DatasetReference"
+					},
+					"name": "DimResourceGroup"
+				},
+				{
+					"dataset": {
+						"referenceName": "DIMInstance",
+						"type": "DatasetReference"
+					},
+					"name": "DimInstance"
+				},
+				{
+					"dataset": {
+						"referenceName": "DIMMeter",
+						"type": "DatasetReference"
+					},
+					"name": "DimMeter"
+				},
+				{
+					"dataset": {
+						"referenceName": "ODSExchangeRateInfo",
+						"type": "DatasetReference"
+					},
+					"name": "ODSExchangeRate"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "AzureSqlDB",
+						"type": "DatasetReference"
+					},
+					"name": "FactBill"
+				}
+			],
+			"transformations": [
+				{
+					"name": "UpperNameAndNotNull"
+				},
+				{
+					"name": "ForAccountID"
+				},
+				{
+					"name": "ForResourceGroupID"
+				},
+				{
+					"name": "ChangeColumn"
+				},
+				{
+					"name": "ForInstanceID"
+				},
+				{
+					"name": "ForMeterID"
+				},
+				{
+					"name": "ForExchangeRate"
+				},
+				{
+					"name": "select"
+				}
+			],
+			"script": "parameters{\n\tSchema as string,\n\tTableName as string,\n\tFileName as string\n}\nsource(output(\n\t\tAccountOwnerId as string,\n\t\tAccountName as string,\n\t\tServiceAdministratorId as string,\n\t\tSubscriptionId as integer,\n\t\tSubscriptionGuid as string,\n\t\tSubscriptionName as string,\n\t\tDate as string,\n\t\tMonth as integer,\n\t\tDay as integer,\n\t\tYear as integer,\n\t\tProduct as string,\n\t\tMeterId as string,\n\t\tMeterCategory as string,\n\t\tMeterSubCategory as string,\n\t\tMeterRegion as string,\n\t\tMeterName as string,\n\t\tConsumedQuantity as double,\n\t\tResourceRate as double,\n\t\tExtendedCost as double,\n\t\tResourceLocation as string,\n\t\tConsumedService as string,\n\t\tInstanceId as string,\n\t\tServiceInfo1 as string,\n\t\tServiceInfo2 as string,\n\t\tAdditionalInfo as string,\n\t\tTags as string,\n\t\tStoreServiceIdentifier as string,\n\t\tDepartmentName as string,\n\t\tCostCenter as string,\n\t\tUnitOfMeasure as string,\n\t\tResourceGroup as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\trowUrlColumn: 'FileName',\n\tdocumentForm: 'documentPerLine') ~> ODSBill\nsource(output(\n\t\tId as integer,\n\t\tAccountOwnerId as string,\n\t\tAccountName as string,\n\t\tInsertTime as timestamp,\n\t\tUpdateTime as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> DImAccount\nsource(output(\n\t\tId as integer,\n\t\tAccountId as integer,\n\t\tSubscriptionId as integer,\n\t\tSubscriptionGuid as string,\n\t\tSubscriptionName as string,\n\t\tResourceGroup as string,\n\t\tInsertTime as timestamp,\n\t\tUpdateTime as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> DimResourceGroup\nsource(output(\n\t\tId as integer,\n\t\tResourceGroupId as integer,\n\t\tInstanceId as string,\n\t\tInstanceName as string,\n\t\tInsertTime as timestamp,\n\t\tUpdateTime as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> DimInstance\nsource(output(\n\t\tId as integer,\n\t\tMeterId as string,\n\t\tMeterCategory as string,\n\t\tMeterSubCategory as string,\n\t\tMeterRegion as string,\n\t\tMeterName as string,\n\t\tProduct as string,\n\t\tInsertTime as timestamp,\n\t\tUpdateTime as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> DimMeter\nsource(output(\n\t\tYearMonth as string,\n\t\tExchange_Rate as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> ODSExchangeRate\nODSBill derive(InstanceName = reverse(split(reverse(upper(InstanceId)),'/')[1]),\n\t\tInstanceId = upper(InstanceId),\n\t\tResourceGroup = iifNull(upper(ResourceGroup),'')) ~> UpperNameAndNotNull\nUpperNameAndNotNull, DImAccount join(ODSBill@AccountOwnerId == DImAccount@AccountOwnerId\n\t&& ODSBill@AccountName == DImAccount@AccountName,\n\tjoinType:'left',\n\tbroadcast: 'auto')~> ForAccountID\nForAccountID, DimResourceGroup join(DImAccount@Id == AccountId\n\t&& ODSBill@SubscriptionId == DimResourceGroup@SubscriptionId\n\t&& ODSBill@SubscriptionName == DimResourceGroup@SubscriptionName\n\t&& UpperNameAndNotNull@ResourceGroup == DimResourceGroup@ResourceGroup\n\t&& ODSBill@SubscriptionGuid == DimResourceGroup@SubscriptionGuid,\n\tjoinType:'left',\n\tbroadcast: 'auto')~> ForResourceGroupID\nForExchangeRate derive(Updt = currentTimestamp(),\n\t\tCostUSD = ExtendedCost*toDecimal(Exchange_Rate),\n\t\tFileName = split(FileName,'/')[4]) ~> ChangeColumn\nForMeterID, DimInstance join(UpperNameAndNotNull@InstanceId == DimInstance@InstanceId\n\t&& UpperNameAndNotNull@InstanceName == DimInstance@InstanceName\n\t&& DimResourceGroup@Id == ResourceGroupId,\n\tjoinType:'left',\n\tbroadcast: 'auto')~> ForInstanceID\nForResourceGroupID, DimMeter join(ODSBill@MeterId == DimMeter@MeterId\n\t&& ODSBill@MeterCategory == DimMeter@MeterCategory\n\t&& ODSBill@MeterSubCategory == DimMeter@MeterSubCategory\n\t&& ODSBill@MeterRegion == DimMeter@MeterRegion\n\t&& ODSBill@MeterName == DimMeter@MeterName\n\t&& ODSBill@Product == DimMeter@Product,\n\tjoinType:'left',\n\tbroadcast: 'auto')~> ForMeterID\nForInstanceID, ODSExchangeRate join(toString(Year*100+Month) == YearMonth,\n\tjoinType:'left',\n\tbroadcast: 'auto')~> ForExchangeRate\nChangeColumn select(mapColumn(\n\t\tDate,\n\t\tInstanceId = DimInstance@Id,\n\t\tMeterId = DimMeter@Id,\n\t\tConsumedQuantity,\n\t\tResourceRate,\n\t\tExtendedCost,\n\t\tCostUSD,\n\t\tResourceLocation,\n\t\tConsumedService,\n\t\tServiceInfo1,\n\t\tServiceInfo2,\n\t\tAdditionalInfo,\n\t\tTags,\n\t\tStoreServiceIdentifier,\n\t\tDepartmentName,\n\t\tCostCenter,\n\t\tUnitofMeasure = UnitOfMeasure,\n\t\tUpdateTime = Updt,\n\t\tFileName\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> select\nselect sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinput(\n\t\tAccountOwnerId as string,\n\t\tAccountName as string,\n\t\tServiceAdministratorId as string,\n\t\tSubscriptionId as long,\n\t\tSubscriptionGuid as string,\n\t\tSubscriptionName as string,\n\t\tDate as date,\n\t\tMonth as long,\n\t\tDay as long,\n\t\tYear as long,\n\t\tProduct as string,\n\t\tMeterId as string,\n\t\tMeterCategory as string,\n\t\tMeterSubCategory as string,\n\t\tMeterRegion as string,\n\t\tMeterName as string,\n\t\tConsumedQuantity as double,\n\t\tResourceRate as double,\n\t\tExtendedCost as double,\n\t\tResourceLocation as string,\n\t\tConsumedService as string,\n\t\tInstanceId as string,\n\t\tServiceInfo1 as string,\n\t\tServiceInfo2 as string,\n\t\tAdditionalInfo as string,\n\t\tTags as string,\n\t\tStoreServiceIdentifier as string,\n\t\tDepartmentName as string,\n\t\tCostCenter as string,\n\t\tUnitOfMeasure as string,\n\t\tResourceGroup as string,\n\t\tID as integer,\n\t\tInsertTime as timestamp,\n\t\tFileName as string\n\t),\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tpreSQLs:[(\"delete from {$Schema}.{$TableName} where FileName=N'{$FileName}'\")],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\terrorHandlingOption: 'stopOnFirstError') ~> FactBill"
+		}
+	}
+}

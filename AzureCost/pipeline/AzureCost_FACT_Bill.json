@@ -1,0 +1,397 @@
+{
+	"name": "AzureCost_FACT_Bill",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Lookup1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup1').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Stored procedure1",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "FACTBill_copy1_copy1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[ACost].[USP_AzureCost_UpdateFileLog]",
+								"storedProcedureParameters": {
+									"FileName": {
+										"value": {
+											"value": "@item().FileName",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"FileType": {
+										"value": {
+											"value": "@pipeline().parameters.FileType",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"IsLoad": {
+										"value": "10",
+										"type": "Int32"
+									},
+									"YearMonth": {
+										"value": {
+											"value": "@substring(item().FileName,7,7)",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "AzureSqlDB",
+								"type": "LinkedServiceReference",
+								"parameters": {
+									"DBService": {
+										"value": "@pipeline().globalParameters.DBService",
+										"type": "Expression"
+									},
+									"DBName": {
+										"value": "@pipeline().globalParameters.DBName",
+										"type": "Expression"
+									},
+									"DBPassword": {
+										"value": "@pipeline().globalParameters.DBPassword",
+										"type": "Expression"
+									},
+									"DBUserName": {
+										"value": "@pipeline().globalParameters.DBUserName",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "FACTBill_copy1_copy1",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "1.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "FACTBill",
+									"type": "DataFlowReference",
+									"parameters": {
+										"Schema": {
+											"value": "'@{pipeline().globalParameters.Schema}'",
+											"type": "Expression"
+										},
+										"TableName": {
+											"value": "'@{pipeline().parameters.FactBill}'",
+											"type": "Expression"
+										},
+										"FileName": {
+											"value": "'@{item().FileName}'",
+											"type": "Expression"
+										}
+									},
+									"datasetParameters": {
+										"ODSBill": {
+											"URL": {
+												"value": "@pipeline().globalParameters.URL",
+												"type": "Expression"
+											},
+											"Container": {
+												"value": "@pipeline().globalParameters.Container",
+												"type": "Expression"
+											},
+											"File": {
+												"value": "@pipeline().parameters.File",
+												"type": "Expression"
+											},
+											"FIleName": {
+												"value": "@item().FileName",
+												"type": "Expression"
+											}
+										},
+										"DImAccount": {
+											"DBService": {
+												"value": "@pipeline().globalParameters.DBService",
+												"type": "Expression"
+											},
+											"DBName": {
+												"value": "@pipeline().globalParameters.DBName",
+												"type": "Expression"
+											},
+											"UserName": {
+												"value": "@pipeline().globalParameters.DBUserName",
+												"type": "Expression"
+											},
+											"PassWord": {
+												"value": "@pipeline().globalParameters.DBPassword",
+												"type": "Expression"
+											},
+											"Schema": {
+												"value": "@pipeline().globalParameters.Schema",
+												"type": "Expression"
+											},
+											"TableName": {
+												"value": "@pipeline().parameters.DIMAccount",
+												"type": "Expression"
+											}
+										},
+										"DimResourceGroup": {
+											"DBService": {
+												"value": "@pipeline().globalParameters.DBService",
+												"type": "Expression"
+											},
+											"DBName": {
+												"value": "@pipeline().globalParameters.DBName",
+												"type": "Expression"
+											},
+											"UserName": {
+												"value": "@pipeline().globalParameters.DBUserName",
+												"type": "Expression"
+											},
+											"PassWord": {
+												"value": "@pipeline().globalParameters.DBPassword",
+												"type": "Expression"
+											},
+											"Schema": {
+												"value": "@pipeline().globalParameters.Schema",
+												"type": "Expression"
+											},
+											"TableName": {
+												"value": "@pipeline().parameters.DIMResourceGroup",
+												"type": "Expression"
+											}
+										},
+										"DimInstance": {
+											"DBService": {
+												"value": "@pipeline().globalParameters.DBService",
+												"type": "Expression"
+											},
+											"DBName": {
+												"value": "@pipeline().globalParameters.DBName",
+												"type": "Expression"
+											},
+											"UserName": {
+												"value": "@pipeline().globalParameters.DBUserName",
+												"type": "Expression"
+											},
+											"PassWord": {
+												"value": "@pipeline().globalParameters.DBPassword",
+												"type": "Expression"
+											},
+											"Schema": {
+												"value": "@pipeline().globalParameters.Schema",
+												"type": "Expression"
+											},
+											"TableName": {
+												"value": "@pipeline().parameters.DIMInstance",
+												"type": "Expression"
+											}
+										},
+										"DimMeter": {
+											"DBService": {
+												"value": "@pipeline().globalParameters.DBService",
+												"type": "Expression"
+											},
+											"DBName": {
+												"value": "@pipeline().globalParameters.DBName",
+												"type": "Expression"
+											},
+											"UserName": {
+												"value": "@pipeline().globalParameters.DBUserName",
+												"type": "Expression"
+											},
+											"PassWord": {
+												"value": "@pipeline().globalParameters.DBPassword",
+												"type": "Expression"
+											},
+											"Schema": {
+												"value": "@pipeline().globalParameters.Schema",
+												"type": "Expression"
+											},
+											"TableName": {
+												"value": "@pipeline().parameters.DIMMeter",
+												"type": "Expression"
+											}
+										},
+										"ODSExchangeRate": {
+											"URL": {
+												"value": "@pipeline().globalParameters.URL",
+												"type": "Expression"
+											},
+											"Container": {
+												"value": "@pipeline().globalParameters.Container",
+												"type": "Expression"
+											},
+											"File": {
+												"value": "@pipeline().parameters.ExchangeRate_File",
+												"type": "Expression"
+											},
+											"FileName": {
+												"value": "@pipeline().parameters.ExchangeRate_FileName",
+												"type": "Expression"
+											}
+										},
+										"FactBill": {
+											"DBService": {
+												"value": "@pipeline().globalParameters.DBService",
+												"type": "Expression"
+											},
+											"DBName": {
+												"value": "@pipeline().globalParameters.DBName",
+												"type": "Expression"
+											},
+											"DBPassword": {
+												"value": "@pipeline().globalParameters.DBPassword",
+												"type": "Expression"
+											},
+											"DBUserName": {
+												"value": "@pipeline().globalParameters.DBUserName",
+												"type": "Expression"
+											},
+											"Schema": {
+												"value": "@pipeline().globalParameters.Schema",
+												"type": "Expression"
+											},
+											"TableName": {
+												"value": "@pipeline().parameters.FactBill",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								"compute": {
+									"coreCount": 8,
+									"computeType": "General"
+								},
+								"traceLevel": "Fine"
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Lookup1",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "select [FileName] from [ACost].[AzureCost_FileLog] where isnull([IsLoad],0) = 1 AND [FileType]='Detail'",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "AzureSqlDB",
+						"type": "DatasetReference",
+						"parameters": {
+							"DBService": {
+								"value": "@pipeline().globalParameters.DBService",
+								"type": "Expression"
+							},
+							"DBName": {
+								"value": "@pipeline().globalParameters.DBName",
+								"type": "Expression"
+							},
+							"DBPassword": {
+								"value": "@pipeline().globalParameters.DBPassword",
+								"type": "Expression"
+							},
+							"DBUserName": {
+								"value": "@pipeline().globalParameters.DBUserName",
+								"type": "Expression"
+							},
+							"Schema": {
+								"value": "@pipeline().globalParameters.Schema",
+								"type": "Expression"
+							},
+							"TableName": "AzureCost_ODS_Bill"
+						}
+					},
+					"firstRowOnly": false
+				}
+			}
+		],
+		"parameters": {
+			"File": {
+				"type": "string",
+				"defaultValue": "ODS/Detail"
+			},
+			"DIMAccount": {
+				"type": "string",
+				"defaultValue": "AzureCost_DIM_Account"
+			},
+			"DIMInstance": {
+				"type": "string",
+				"defaultValue": "AzureCost_DIM_Instance"
+			},
+			"DIMMeter": {
+				"type": "string",
+				"defaultValue": "AzureCost_DIM_Meter"
+			},
+			"DIMResourceGroup": {
+				"type": "string",
+				"defaultValue": "AzureCost_DIM_ResourceGroup"
+			},
+			"FactBill": {
+				"type": "string",
+				"defaultValue": "AzureCost_FACT_Bill"
+			},
+			"ExchangeRate_File": {
+				"type": "string",
+				"defaultValue": "ODS/ExchangeRateInfo"
+			},
+			"ExchangeRate_FileName": {
+				"type": "string",
+				"defaultValue": "ExchangeRateInfo.csv"
+			},
+			"FileType": {
+				"type": "string",
+				"defaultValue": "Detail"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-12-06T08:55:22Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

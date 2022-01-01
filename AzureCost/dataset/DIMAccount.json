@@ -1,0 +1,93 @@
+{
+	"name": "DIMAccount",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlDB",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"DBService": {
+					"value": "@dataset().DBService",
+					"type": "Expression"
+				},
+				"DBName": {
+					"value": "@dataset().DBName",
+					"type": "Expression"
+				},
+				"DBPassword": {
+					"value": "@dataset().PassWord",
+					"type": "Expression"
+				},
+				"DBUserName": {
+					"value": "@dataset().UserName",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"DBService": {
+				"type": "string",
+				"defaultValue": "dev.database.chinacloudapi.cn"
+			},
+			"DBName": {
+				"type": "string",
+				"defaultValue": "DevDB"
+			},
+			"UserName": {
+				"type": "string",
+				"defaultValue": "acost"
+			},
+			"PassWord": {
+				"type": "string",
+				"defaultValue": "1qaz!QAZ"
+			},
+			"Schema": {
+				"type": "string",
+				"defaultValue": "ACost"
+			},
+			"TableName": {
+				"type": "string",
+				"defaultValue": "AzureCost_DIM_Account"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "AccountOwnerId",
+				"type": "nvarchar"
+			},
+			{
+				"name": "AccountName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "InsertTime",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "UpdateTime",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().Schema",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().TableName",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

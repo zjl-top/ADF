@@ -1,0 +1,71 @@
+{
+	"name": "ODSEmailConfig",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage2",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"URL": {
+					"value": "@dataset().URL",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"URL": {
+				"type": "string",
+				"defaultValue": "https://azurecost.dfs.core.chinacloudapi.cn/"
+			},
+			"Container": {
+				"type": "string",
+				"defaultValue": "azurecost"
+			},
+			"File": {
+				"type": "string",
+				"defaultValue": "ODS/EmailConfig"
+			},
+			"FileName": {
+				"type": "string",
+				"defaultValue": "EmailConfig.csv"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().FileName",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().File",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "@dataset().Container",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "EmailType",
+				"type": "String"
+			},
+			{
+				"name": "SendToEmail",
+				"type": "String"
+			},
+			{
+				"name": "CCToEmail",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

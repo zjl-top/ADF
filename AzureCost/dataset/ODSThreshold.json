@@ -1,0 +1,87 @@
+{
+	"name": "ODSThreshold",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage2",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"URL": {
+					"value": "@dataset().URL",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"URL": {
+				"type": "string",
+				"defaultValue": "https://azurecost.dfs.core.chinacloudapi.cn/"
+			},
+			"Container": {
+				"type": "string",
+				"defaultValue": "azurecost"
+			},
+			"File": {
+				"type": "string",
+				"defaultValue": "ODS/ThresholdInformation"
+			},
+			"FileName": {
+				"type": "string",
+				"defaultValue": "ThresholdInformation_2021-9.csv"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().FileName",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().File",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "@dataset().Container",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "YearMonth",
+				"type": "String"
+			},
+			{
+				"name": "AccountOwnerId",
+				"type": "String"
+			},
+			{
+				"name": "SubscriptionName",
+				"type": "String"
+			},
+			{
+				"name": "ResourceGroup",
+				"type": "String"
+			},
+			{
+				"name": "Daily_Threshold_Percentage",
+				"type": "String"
+			},
+			{
+				"name": "Weekly_Threshold_Percentage",
+				"type": "String"
+			},
+			{
+				"name": "Monthly_Threshold_Percentage",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

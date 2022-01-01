@@ -1,0 +1,67 @@
+{
+	"name": "AzureCost_DIm_Account",
+	"properties": {
+		"activities": [
+			{
+				"name": "Account ODS To Dim",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "1.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DImAccount",
+						"type": "DataFlowReference",
+						"parameters": {
+							"tpf": {
+								"value": "'@{concat(pipeline().parameters.File,'/','*','.json')}'",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"source1": {
+								"URL": {
+									"value": "@pipeline().globalParameters.URL",
+									"type": "Expression"
+								},
+								"Container": {
+									"value": "@pipeline().globalParameters.Container",
+									"type": "Expression"
+								},
+								"File": {
+									"value": "@pipeline().parameters.File",
+									"type": "Expression"
+								},
+								"FIleName": "Detail_2020-8.json"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"parameters": {
+			"File": {
+				"type": "string",
+				"defaultValue": "ODS/Detail"
+			},
+			"TableName": {
+				"type": "string",
+				"defaultValue": "AzureCost_DIM_Account"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-12-06T01:50:22Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

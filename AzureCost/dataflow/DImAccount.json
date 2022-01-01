@@ -1,0 +1,41 @@
+{
+	"name": "DImAccount",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Json",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DIMAccount",
+						"type": "DatasetReference"
+					},
+					"name": "DimAccount"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AggColumn"
+				},
+				{
+					"name": "UpdateTime"
+				},
+				{
+					"name": "select"
+				},
+				{
+					"name": "Alter"
+				}
+			],
+			"script": "parameters{\n\ttpf as string\n}\nsource(output(\n\t\tAccountOwnerId as string,\n\t\tAccountName as string,\n\t\tServiceAdministratorId as string,\n\t\tSubscriptionId as integer,\n\t\tSubscriptionGuid as string,\n\t\tSubscriptionName as string,\n\t\tDate as string,\n\t\tMonth as integer,\n\t\tDay as integer,\n\t\tYear as integer,\n\t\tProduct as string,\n\t\tMeterId as string,\n\t\tMeterCategory as string,\n\t\tMeterSubCategory as string,\n\t\tMeterRegion as string,\n\t\tMeterName as string,\n\t\tConsumedQuantity as double,\n\t\tResourceRate as double,\n\t\tExtendedCost as double,\n\t\tResourceLocation as string,\n\t\tConsumedService as string,\n\t\tInstanceId as string,\n\t\tServiceInfo1 as string,\n\t\tServiceInfo2 as string,\n\t\tAdditionalInfo as string,\n\t\tTags as string,\n\t\tStoreServiceIdentifier as string,\n\t\tDepartmentName as string,\n\t\tCostCenter as string,\n\t\tUnitOfMeasure as string,\n\t\tResourceGroup as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tdocumentForm: 'documentPerLine',\n\twildcardPaths:[($tpf)]) ~> source1\nsource1 aggregate(groupBy(AccountOwnerId,\n\t\tAccountName),\n\tAccountOwnerIDCount = count(AccountOwnerId)) ~> AggColumn\nAggColumn derive(UPDATETIME = currentTimestamp()) ~> UpdateTime\nUpdateTime select(mapColumn(\n\t\tAccountOwnerId,\n\t\tAccountName,\n\t\tUpdateTime = UPDATETIME\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> select\nselect alterRow(upsertIf(true())) ~> Alter\nAlter sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinput(\n\t\tId as integer,\n\t\tAccountOwnerId as string,\n\t\tAccountName as string,\n\t\tInsertTime as timestamp,\n\t\tUpdateTime as timestamp\n\t),\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:true,\n\tkeys:['AccountOwnerId','AccountName'],\n\tformat: 'table',\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\terrorHandlingOption: 'stopOnFirstError') ~> DimAccount"
+		}
+	}
+}

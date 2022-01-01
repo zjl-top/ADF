@@ -1,0 +1,73 @@
+{
+	"name": "ExcelSource_metadate",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage2",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"URL": {
+					"value": "@dataset().URL",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"ExcelName": {
+				"type": "string",
+				"defaultValue": "ThresholdInformation_2021-9.xlsx"
+			},
+			"ExcelFile": {
+				"type": "string",
+				"defaultValue": "BackUp/ThresholdInformation"
+			},
+			"ExcelContainer": {
+				"type": "string",
+				"defaultValue": "azurecost"
+			},
+			"URL": {
+				"type": "string",
+				"defaultValue": "https://azurecost.dfs.core.chinacloudapi.cn/"
+			}
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Sheet1",
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": {
+					"value": "@dataset().ExcelFile",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "@dataset().ExcelContainer",
+					"type": "Expression"
+				}
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "YearMonth",
+				"type": "String"
+			},
+			{
+				"name": "ResourceGroup",
+				"type": "String"
+			},
+			{
+				"name": "Daily_Threshold_Percentage",
+				"type": "String"
+			},
+			{
+				"name": "Weekly_Threshold_Percentage",
+				"type": "String"
+			},
+			{
+				"name": "Monthly_Threshold_Percentage",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

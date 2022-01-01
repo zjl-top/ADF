@@ -1,0 +1,214 @@
+{
+	"name": "AzureSqlDB",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlDB",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"DBService": {
+					"value": "@dataset().DBService",
+					"type": "Expression"
+				},
+				"DBName": {
+					"value": "@dataset().DBName",
+					"type": "Expression"
+				},
+				"DBPassword": {
+					"value": "@dataset().DBPassword",
+					"type": "Expression"
+				},
+				"DBUserName": {
+					"value": "@dataset().DBUserName",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"DBService": {
+				"type": "string",
+				"defaultValue": "dev.database.chinacloudapi.cn"
+			},
+			"DBName": {
+				"type": "string",
+				"defaultValue": "DevDB"
+			},
+			"DBPassword": {
+				"type": "string",
+				"defaultValue": "1qaz!QAZ"
+			},
+			"DBUserName": {
+				"type": "string",
+				"defaultValue": "acost"
+			},
+			"Schema": {
+				"type": "string",
+				"defaultValue": "ACost"
+			},
+			"TableName": {
+				"type": "string",
+				"defaultValue": "AzureCost_ODS_Bill"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "AccountOwnerId",
+				"type": "nvarchar"
+			},
+			{
+				"name": "AccountName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ServiceAdministratorId",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SubscriptionId",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "SubscriptionGuid",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SubscriptionName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Date",
+				"type": "date"
+			},
+			{
+				"name": "Month",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "Day",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "Year",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "Product",
+				"type": "nvarchar"
+			},
+			{
+				"name": "MeterId",
+				"type": "nvarchar"
+			},
+			{
+				"name": "MeterCategory",
+				"type": "nvarchar"
+			},
+			{
+				"name": "MeterSubCategory",
+				"type": "nvarchar"
+			},
+			{
+				"name": "MeterRegion",
+				"type": "nvarchar"
+			},
+			{
+				"name": "MeterName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ConsumedQuantity",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "ResourceRate",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "ExtendedCost",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "ResourceLocation",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ConsumedService",
+				"type": "nvarchar"
+			},
+			{
+				"name": "InstanceId",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ServiceInfo1",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ServiceInfo2",
+				"type": "nvarchar"
+			},
+			{
+				"name": "AdditionalInfo",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Tags",
+				"type": "nvarchar"
+			},
+			{
+				"name": "StoreServiceIdentifier",
+				"type": "nvarchar"
+			},
+			{
+				"name": "DepartmentName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "CostCenter",
+				"type": "nvarchar"
+			},
+			{
+				"name": "UnitOfMeasure",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ResourceGroup",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "InsertTime",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "FileName",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().Schema",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().TableName",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

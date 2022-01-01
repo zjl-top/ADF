@@ -1,0 +1,48 @@
+{
+	"name": "DimDate",
+	"properties": {
+		"activities": [
+			{
+				"name": "Stored procedure",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[ACost].[USP_AzureCost_DIM_Date]"
+				},
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDB",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"DBService": {
+							"value": "@pipeline().globalParameters.DBService",
+							"type": "Expression"
+						},
+						"DBName": {
+							"value": "@pipeline().globalParameters.DBName",
+							"type": "Expression"
+						},
+						"DBPassword": {
+							"value": "@pipeline().globalParameters.DBPassword",
+							"type": "Expression"
+						},
+						"DBUserName": {
+							"value": "@pipeline().globalParameters.DBUserName",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2021-12-07T07:31:31Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

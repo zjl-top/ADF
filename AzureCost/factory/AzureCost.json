@@ -1,0 +1,45 @@
+{
+	"name": "AzureCost",
+	"properties": {
+		"globalParameters": {
+			"AzureCostPath": {
+				"type": "string",
+				"value": "https://twjtest.blob.core.chinacloudapi.cn/azurecost"
+			},
+			"Container": {
+				"type": "string",
+				"value": "azurecost"
+			},
+			"DBService": {
+				"type": "string",
+				"value": "dev.database.chinacloudapi.cn"
+			},
+			"DBName": {
+				"type": "string",
+				"value": "DevDB"
+			},
+			"DBUserName": {
+				"type": "string",
+				"value": "acost"
+			},
+			"DBPassword": {
+				"type": "string",
+				"value": "1qaz!QAZ"
+			},
+			"URL": {
+				"type": "string",
+				"value": "https://azurecost.dfs.core.chinacloudapi.cn/"
+			},
+			"Schema": {
+				"type": "string",
+				"value": "ACost"
+			}
+		}
+	},
+	"location": "chinaeast2",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "0dfb4974-060b-40ff-b64b-139584a0a6ab",
+		"tenantId": "423b5fff-c8e5-4598-aa75-418e46acc47b"
+	}
+}

@@ -1,0 +1,152 @@
+{
+	"name": "AzureCost_DIm_Instance",
+	"properties": {
+		"activities": [
+			{
+				"name": "Instance ODS To Dim",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "1.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DimInstance",
+						"type": "DataFlowReference",
+						"parameters": {
+							"tpf": {
+								"value": "'@{concat(pipeline().parameters.File,'/','*','.json')}'",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"Bill": {
+								"URL": {
+									"value": "@pipeline().globalParameters.URL",
+									"type": "Expression"
+								},
+								"Container": {
+									"value": "@pipeline().globalParameters.Container",
+									"type": "Expression"
+								},
+								"File": {
+									"value": "@pipeline().parameters.File",
+									"type": "Expression"
+								}
+							},
+							"DImAccount": {
+								"DBService": {
+									"value": "@pipeline().globalParameters.DBService",
+									"type": "Expression"
+								},
+								"DBName": {
+									"value": "@pipeline().globalParameters.DBName",
+									"type": "Expression"
+								},
+								"UserName": {
+									"value": "@pipeline().globalParameters.DBUserName",
+									"type": "Expression"
+								},
+								"PassWord": {
+									"value": "@pipeline().globalParameters.DBPassword",
+									"type": "Expression"
+								},
+								"Schema": {
+									"value": "@pipeline().globalParameters.Schema",
+									"type": "Expression"
+								},
+								"TableName": {
+									"value": "@pipeline().parameters.DimAccount",
+									"type": "Expression"
+								}
+							},
+							"DimResourceGroup": {
+								"DBService": {
+									"value": "@pipeline().globalParameters.DBService",
+									"type": "Expression"
+								},
+								"DBName": {
+									"value": "@pipeline().globalParameters.DBName",
+									"type": "Expression"
+								},
+								"UserName": {
+									"value": "@pipeline().globalParameters.DBUserName",
+									"type": "Expression"
+								},
+								"PassWord": {
+									"value": "@pipeline().globalParameters.DBPassword",
+									"type": "Expression"
+								},
+								"Schema": {
+									"value": "@pipeline().globalParameters.Schema",
+									"type": "Expression"
+								},
+								"TableName": {
+									"value": "@pipeline().parameters.DImResourceGroup",
+									"type": "Expression"
+								}
+							},
+							"DImInstance": {
+								"DBService": {
+									"value": "@pipeline().globalParameters.DBService",
+									"type": "Expression"
+								},
+								"DBName": {
+									"value": "@pipeline().globalParameters.DBName",
+									"type": "Expression"
+								},
+								"DBPassword": {
+									"value": "@pipeline().globalParameters.DBPassword",
+									"type": "Expression"
+								},
+								"DBUserName": {
+									"value": "@pipeline().globalParameters.DBUserName",
+									"type": "Expression"
+								},
+								"Schema": {
+									"value": "@pipeline().globalParameters.Schema",
+									"type": "Expression"
+								},
+								"TableName": {
+									"value": "@pipeline().parameters.DIMInstance",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"parameters": {
+			"File": {
+				"type": "string",
+				"defaultValue": "ODS/Detail"
+			},
+			"DimAccount": {
+				"type": "string",
+				"defaultValue": "AzureCost_DIM_Account"
+			},
+			"DImResourceGroup": {
+				"type": "string",
+				"defaultValue": "AzureCost_DIM_ResourceGroup"
+			},
+			"DIMInstance": {
+				"type": "string",
+				"defaultValue": "AzureCost_DIM_Instance"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-12-06T01:50:22Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

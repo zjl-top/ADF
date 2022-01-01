@@ -1,0 +1,25 @@
+{
+	"name": "APIDetail",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "RestService1",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"YearMonth": {
+				"type": "string",
+				"defaultValue": "2019-1"
+			}
+		},
+		"annotations": [],
+		"type": "RestResource",
+		"typeProperties": {
+			"relativeUrl": {
+				"value": "V5702007S0342/usage-report?month=@{dataset().YearMonth}&type=detail&fmt=json",
+				"type": "Expression"
+			}
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

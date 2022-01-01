@@ -1,0 +1,1293 @@
+{
+	"name": "AzureCost_ODS_Detail",
+	"properties": {
+		"activities": [
+			{
+				"name": "Lookup1",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "select [FileName] from [ACost].[AzureCost_FileLog]\nWHERE isnull(IsLoad,0) < 1 and [FileType]='Detail'\nunion \nselect  'Detail_' + CONVERT(NVARCHAR(7),getdate(),120) + '.json'\n",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "AzureSqlDB",
+						"type": "DatasetReference",
+						"parameters": {
+							"DBService": {
+								"value": "@pipeline().globalParameters.DBService",
+								"type": "Expression"
+							},
+							"DBName": {
+								"value": "@pipeline().globalParameters.DBName",
+								"type": "Expression"
+							},
+							"DBPassword": {
+								"value": "@pipeline().globalParameters.DBPassword",
+								"type": "Expression"
+							},
+							"DBUserName": {
+								"value": "@pipeline().globalParameters.DBUserName",
+								"type": "Expression"
+							},
+							"Schema": {
+								"value": "@pipeline().globalParameters.Schema",
+								"type": "Expression"
+							},
+							"TableName": "AzureCost_ODS_Bill"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Lookup1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup1').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "RestAPI To Upload",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [
+								{
+									"name": "Source",
+									"value": "V5702007S0342/usage-report?month=2021-10&type=detail&fmt=json"
+								},
+								{
+									"name": "Destination",
+									"value": "azurecost/upload/"
+								}
+							],
+							"typeProperties": {
+								"source": {
+									"type": "RestSource",
+									"httpRequestTimeout": "00:01:40",
+									"requestInterval": "00.00:00:00.010",
+									"requestMethod": "GET",
+									"paginationRules": {
+										"supportRFC5988": "true"
+									}
+								},
+								"sink": {
+									"type": "JsonSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "JsonWriteSettings",
+										"filePattern": "setOfObjects"
+									}
+								},
+								"enableStaging": false,
+								"validateDataConsistency": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"path": "$['AccountOwnerId']"
+											},
+											"sink": {
+												"name": "AccountOwnerId",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['AccountName']"
+											},
+											"sink": {
+												"name": "AccountName",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ServiceAdministratorId']"
+											},
+											"sink": {
+												"name": "ServiceAdministratorId",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['SubscriptionId']"
+											},
+											"sink": {
+												"name": "SubscriptionId",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['SubscriptionGuid']"
+											},
+											"sink": {
+												"name": "SubscriptionGuid"
+											}
+										},
+										{
+											"source": {
+												"path": "$['SubscriptionName']"
+											},
+											"sink": {
+												"name": "SubscriptionName"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Date']"
+											},
+											"sink": {
+												"name": "Date"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Month']"
+											},
+											"sink": {
+												"name": "Month"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Day']"
+											},
+											"sink": {
+												"name": "Day"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Year']"
+											},
+											"sink": {
+												"name": "Year"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Product']"
+											},
+											"sink": {
+												"name": "Product"
+											}
+										},
+										{
+											"source": {
+												"path": "$['MeterId']"
+											},
+											"sink": {
+												"name": "MeterId"
+											}
+										},
+										{
+											"source": {
+												"path": "$['MeterCategory']"
+											},
+											"sink": {
+												"name": "MeterCategory"
+											}
+										},
+										{
+											"source": {
+												"path": "$['MeterSubCategory']"
+											},
+											"sink": {
+												"name": "MeterSubCategory"
+											}
+										},
+										{
+											"source": {
+												"path": "$['MeterRegion']"
+											},
+											"sink": {
+												"name": "MeterRegion"
+											}
+										},
+										{
+											"source": {
+												"path": "$['MeterName']"
+											},
+											"sink": {
+												"name": "MeterName"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ConsumedQuantity']"
+											},
+											"sink": {
+												"name": "ConsumedQuantity"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ResourceRate']"
+											},
+											"sink": {
+												"name": "ResourceRate"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ExtendedCost']"
+											},
+											"sink": {
+												"name": "ExtendedCost"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ResourceLocation']"
+											},
+											"sink": {
+												"name": "ResourceLocation"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ConsumedService']"
+											},
+											"sink": {
+												"name": "ConsumedService"
+											}
+										},
+										{
+											"source": {
+												"path": "$['InstanceId']"
+											},
+											"sink": {
+												"name": "InstanceId"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ServiceInfo1']"
+											},
+											"sink": {
+												"name": "ServiceInfo1"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ServiceInfo2']"
+											},
+											"sink": {
+												"name": "ServiceInfo2"
+											}
+										},
+										{
+											"source": {
+												"path": "$['AdditionalInfo']"
+											},
+											"sink": {
+												"name": "AdditionalInfo"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Tags']"
+											},
+											"sink": {
+												"name": "Tags",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['StoreServiceIdentifier']"
+											},
+											"sink": {
+												"name": "StoreServiceIdentifier"
+											}
+										},
+										{
+											"source": {
+												"path": "$['DepartmentName']"
+											},
+											"sink": {
+												"name": "DepartmentName"
+											}
+										},
+										{
+											"source": {
+												"path": "$['CostCenter']"
+											},
+											"sink": {
+												"name": "CostCenter"
+											}
+										},
+										{
+											"source": {
+												"path": "$['UnitOfMeasure']"
+											},
+											"sink": {
+												"name": "UnitOfMeasure"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ResourceGroup']"
+											},
+											"sink": {
+												"name": "ResourceGroup"
+											}
+										}
+									],
+									"collectionReference": ""
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "APIDetail",
+									"type": "DatasetReference",
+									"parameters": {
+										"YearMonth": {
+											"value": "@substring(item().FileName,7,7)",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "Json",
+									"type": "DatasetReference",
+									"parameters": {
+										"URL": {
+											"value": "@pipeline().globalParameters.URL",
+											"type": "Expression"
+										},
+										"Container": {
+											"value": "@pipeline().globalParameters.Container",
+											"type": "Expression"
+										},
+										"File": {
+											"value": "@concat(pipeline().parameters.Upload,'/',pipeline().parameters.Detail)",
+											"type": "Expression"
+										},
+										"FIleName": {
+											"value": "@item().FileName",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "Data To BackUp",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "RestAPI To Upload",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [
+								{
+									"name": "Source",
+									"value": "V5702007S0342/usage-report?month=2021-10&type=detail&fmt=json"
+								},
+								{
+									"name": "Destination",
+									"value": "azurecost/upload/"
+								}
+							],
+							"typeProperties": {
+								"source": {
+									"type": "JsonSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "JsonReadSettings"
+									}
+								},
+								"sink": {
+									"type": "JsonSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "JsonWriteSettings",
+										"filePattern": "setOfObjects"
+									}
+								},
+								"enableStaging": false,
+								"validateDataConsistency": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"path": "$['AccountOwnerId']"
+											},
+											"sink": {
+												"name": "AccountOwnerId",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['AccountName']"
+											},
+											"sink": {
+												"name": "AccountName",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ServiceAdministratorId']"
+											},
+											"sink": {
+												"name": "ServiceAdministratorId",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['SubscriptionId']"
+											},
+											"sink": {
+												"name": "SubscriptionId",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['SubscriptionGuid']"
+											},
+											"sink": {
+												"name": "SubscriptionGuid"
+											}
+										},
+										{
+											"source": {
+												"path": "$['SubscriptionName']"
+											},
+											"sink": {
+												"name": "SubscriptionName"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Date']"
+											},
+											"sink": {
+												"name": "Date"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Month']"
+											},
+											"sink": {
+												"name": "Month"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Day']"
+											},
+											"sink": {
+												"name": "Day"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Year']"
+											},
+											"sink": {
+												"name": "Year"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Product']"
+											},
+											"sink": {
+												"name": "Product"
+											}
+										},
+										{
+											"source": {
+												"path": "$['MeterId']"
+											},
+											"sink": {
+												"name": "MeterId"
+											}
+										},
+										{
+											"source": {
+												"path": "$['MeterCategory']"
+											},
+											"sink": {
+												"name": "MeterCategory"
+											}
+										},
+										{
+											"source": {
+												"path": "$['MeterSubCategory']"
+											},
+											"sink": {
+												"name": "MeterSubCategory"
+											}
+										},
+										{
+											"source": {
+												"path": "$['MeterRegion']"
+											},
+											"sink": {
+												"name": "MeterRegion"
+											}
+										},
+										{
+											"source": {
+												"path": "$['MeterName']"
+											},
+											"sink": {
+												"name": "MeterName"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ConsumedQuantity']"
+											},
+											"sink": {
+												"name": "ConsumedQuantity"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ResourceRate']"
+											},
+											"sink": {
+												"name": "ResourceRate"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ExtendedCost']"
+											},
+											"sink": {
+												"name": "ExtendedCost"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ResourceLocation']"
+											},
+											"sink": {
+												"name": "ResourceLocation"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ConsumedService']"
+											},
+											"sink": {
+												"name": "ConsumedService"
+											}
+										},
+										{
+											"source": {
+												"path": "$['InstanceId']"
+											},
+											"sink": {
+												"name": "InstanceId"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ServiceInfo1']"
+											},
+											"sink": {
+												"name": "ServiceInfo1"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ServiceInfo2']"
+											},
+											"sink": {
+												"name": "ServiceInfo2"
+											}
+										},
+										{
+											"source": {
+												"path": "$['AdditionalInfo']"
+											},
+											"sink": {
+												"name": "AdditionalInfo"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Tags']"
+											},
+											"sink": {
+												"name": "Tags",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['StoreServiceIdentifier']"
+											},
+											"sink": {
+												"name": "StoreServiceIdentifier"
+											}
+										},
+										{
+											"source": {
+												"path": "$['DepartmentName']"
+											},
+											"sink": {
+												"name": "DepartmentName"
+											}
+										},
+										{
+											"source": {
+												"path": "$['CostCenter']"
+											},
+											"sink": {
+												"name": "CostCenter"
+											}
+										},
+										{
+											"source": {
+												"path": "$['UnitOfMeasure']"
+											},
+											"sink": {
+												"name": "UnitOfMeasure"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ResourceGroup']"
+											},
+											"sink": {
+												"name": "ResourceGroup"
+											}
+										}
+									],
+									"collectionReference": ""
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "Json",
+									"type": "DatasetReference",
+									"parameters": {
+										"URL": {
+											"value": "@pipeline().globalParameters.URL",
+											"type": "Expression"
+										},
+										"Container": {
+											"value": "@pipeline().globalParameters.Container",
+											"type": "Expression"
+										},
+										"File": {
+											"value": "@concat(pipeline().parameters.Upload,'/',pipeline().parameters.Detail)",
+											"type": "Expression"
+										},
+										"FIleName": {
+											"value": "@item().FileName",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "Json",
+									"type": "DatasetReference",
+									"parameters": {
+										"URL": {
+											"value": "@pipeline().globalParameters.URL",
+											"type": "Expression"
+										},
+										"Container": {
+											"value": "@pipeline().globalParameters.Container",
+											"type": "Expression"
+										},
+										"File": {
+											"value": "@replace(concat(pipeline().parameters.Upload,'/',pipeline().parameters.Detail),'Upload','BackUp')",
+											"type": "Expression"
+										},
+										"FIleName": {
+											"value": "@{concat(split(item().FileName,'.')[0],'_',formatDateTime(utcnow(),'yyyy-MM-dd HH:mm:ss'),'.json')}",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "Stored procedure1",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Delete Upload",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[ACost].[USP_AzureCost_UpdateFileLog]",
+								"storedProcedureParameters": {
+									"FileName": {
+										"value": {
+											"value": "@item().FileName",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"FileType": {
+										"value": {
+											"value": "@pipeline().parameters.Detail",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"IsLoad": {
+										"value": "1",
+										"type": "Int32"
+									},
+									"YearMonth": {
+										"value": {
+											"value": "@substring(item().FileName,7,7)",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "AzureSqlDB",
+								"type": "LinkedServiceReference",
+								"parameters": {
+									"DBService": {
+										"value": "@pipeline().globalParameters.DBService",
+										"type": "Expression"
+									},
+									"DBName": {
+										"value": "@pipeline().globalParameters.DBName",
+										"type": "Expression"
+									},
+									"DBPassword": {
+										"value": "@pipeline().globalParameters.DBPassword",
+										"type": "Expression"
+									},
+									"DBUserName": {
+										"value": "@pipeline().globalParameters.DBUserName",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "Data To ODS",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Data To BackUp",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [
+								{
+									"name": "Source",
+									"value": "V5702007S0342/usage-report?month=2021-10&type=detail&fmt=json"
+								},
+								{
+									"name": "Destination",
+									"value": "azurecost/upload/"
+								}
+							],
+							"typeProperties": {
+								"source": {
+									"type": "JsonSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "JsonReadSettings"
+									}
+								},
+								"sink": {
+									"type": "JsonSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "JsonWriteSettings",
+										"filePattern": "setOfObjects"
+									}
+								},
+								"enableStaging": false,
+								"validateDataConsistency": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"path": "$['AccountOwnerId']"
+											},
+											"sink": {
+												"name": "AccountOwnerId",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['AccountName']"
+											},
+											"sink": {
+												"name": "AccountName",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ServiceAdministratorId']"
+											},
+											"sink": {
+												"name": "ServiceAdministratorId",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['SubscriptionId']"
+											},
+											"sink": {
+												"name": "SubscriptionId",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['SubscriptionGuid']"
+											},
+											"sink": {
+												"name": "SubscriptionGuid"
+											}
+										},
+										{
+											"source": {
+												"path": "$['SubscriptionName']"
+											},
+											"sink": {
+												"name": "SubscriptionName"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Date']"
+											},
+											"sink": {
+												"name": "Date"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Month']"
+											},
+											"sink": {
+												"name": "Month"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Day']"
+											},
+											"sink": {
+												"name": "Day"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Year']"
+											},
+											"sink": {
+												"name": "Year"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Product']"
+											},
+											"sink": {
+												"name": "Product"
+											}
+										},
+										{
+											"source": {
+												"path": "$['MeterId']"
+											},
+											"sink": {
+												"name": "MeterId"
+											}
+										},
+										{
+											"source": {
+												"path": "$['MeterCategory']"
+											},
+											"sink": {
+												"name": "MeterCategory"
+											}
+										},
+										{
+											"source": {
+												"path": "$['MeterSubCategory']"
+											},
+											"sink": {
+												"name": "MeterSubCategory"
+											}
+										},
+										{
+											"source": {
+												"path": "$['MeterRegion']"
+											},
+											"sink": {
+												"name": "MeterRegion"
+											}
+										},
+										{
+											"source": {
+												"path": "$['MeterName']"
+											},
+											"sink": {
+												"name": "MeterName"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ConsumedQuantity']"
+											},
+											"sink": {
+												"name": "ConsumedQuantity"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ResourceRate']"
+											},
+											"sink": {
+												"name": "ResourceRate"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ExtendedCost']"
+											},
+											"sink": {
+												"name": "ExtendedCost"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ResourceLocation']"
+											},
+											"sink": {
+												"name": "ResourceLocation"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ConsumedService']"
+											},
+											"sink": {
+												"name": "ConsumedService"
+											}
+										},
+										{
+											"source": {
+												"path": "$['InstanceId']"
+											},
+											"sink": {
+												"name": "InstanceId"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ServiceInfo1']"
+											},
+											"sink": {
+												"name": "ServiceInfo1"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ServiceInfo2']"
+											},
+											"sink": {
+												"name": "ServiceInfo2"
+											}
+										},
+										{
+											"source": {
+												"path": "$['AdditionalInfo']"
+											},
+											"sink": {
+												"name": "AdditionalInfo"
+											}
+										},
+										{
+											"source": {
+												"path": "$['Tags']"
+											},
+											"sink": {
+												"name": "Tags",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['StoreServiceIdentifier']"
+											},
+											"sink": {
+												"name": "StoreServiceIdentifier"
+											}
+										},
+										{
+											"source": {
+												"path": "$['DepartmentName']"
+											},
+											"sink": {
+												"name": "DepartmentName"
+											}
+										},
+										{
+											"source": {
+												"path": "$['CostCenter']"
+											},
+											"sink": {
+												"name": "CostCenter"
+											}
+										},
+										{
+											"source": {
+												"path": "$['UnitOfMeasure']"
+											},
+											"sink": {
+												"name": "UnitOfMeasure"
+											}
+										},
+										{
+											"source": {
+												"path": "$['ResourceGroup']"
+											},
+											"sink": {
+												"name": "ResourceGroup"
+											}
+										}
+									],
+									"collectionReference": ""
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "Json",
+									"type": "DatasetReference",
+									"parameters": {
+										"URL": {
+											"value": "@pipeline().globalParameters.URL",
+											"type": "Expression"
+										},
+										"Container": {
+											"value": "@pipeline().globalParameters.Container",
+											"type": "Expression"
+										},
+										"File": {
+											"value": "@concat(pipeline().parameters.Upload,'/',pipeline().parameters.Detail)",
+											"type": "Expression"
+										},
+										"FIleName": {
+											"value": "@item().FileName",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "Json",
+									"type": "DatasetReference",
+									"parameters": {
+										"URL": {
+											"value": "@pipeline().globalParameters.URL",
+											"type": "Expression"
+										},
+										"Container": {
+											"value": "@pipeline().globalParameters.Container",
+											"type": "Expression"
+										},
+										"File": {
+											"value": "@replace(concat(pipeline().parameters.Upload,'/',pipeline().parameters.Detail),'Upload','ODS')\n",
+											"type": "Expression"
+										},
+										"FIleName": {
+											"value": "@item().FileName",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "Delete Upload",
+							"type": "Delete",
+							"dependsOn": [
+								{
+									"activity": "Data To ODS",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "ExcelSource",
+									"type": "DatasetReference",
+									"parameters": {
+										"ExcelName": {
+											"value": "@item().FileName",
+											"type": "Expression"
+										},
+										"ExcelFile": {
+											"value": "@concat(pipeline().parameters.Upload,'/',pipeline().parameters.Detail)",
+											"type": "Expression"
+										},
+										"ExcelContainer": {
+											"value": "@pipeline().globalParameters.Container",
+											"type": "Expression"
+										},
+										"URL": {
+											"value": "@pipeline().globalParameters.URL",
+											"type": "Expression"
+										}
+									}
+								},
+								"enableLogging": false,
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"Detail": {
+				"type": "string",
+				"defaultValue": "Detail"
+			},
+			"TableName": {
+				"type": "string",
+				"defaultValue": "AzureCost_ODS_Bill"
+			},
+			"Upload": {
+				"type": "string",
+				"defaultValue": "Upload"
+			}
+		},
+		"variables": {
+			"Month": {
+				"type": "String",
+				"defaultValue": "202101"
+			},
+			"DetailPath": {
+				"type": "String",
+				"defaultValue": "@{concat(pipeline().globalParameters.AzureCostPath,'/', pipeline().parameters.Detail)}"
+			},
+			"DetailFileName": {
+				"type": "String",
+				"defaultValue": "Detail.csv"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-12-07T02:47:46Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
